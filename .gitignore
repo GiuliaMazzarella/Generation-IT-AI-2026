@@ -1,0 +1,9 @@
+.admin_token
+.admin_token.enc
+.weather_cache.pkl
+.geocode_cache.pkl
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*

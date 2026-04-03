@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="/static/style.css?v=20260403b">
+  </head>
+  <body>
+    <main>
+
+      <!-- Site title on top -->
+      <header class="header">
+        <h1 class="site-title">Giulia's Weather <span class="site-title-rainbow" aria-hidden="true">🌈</span></h1>
+        <div>
+          <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+        </div>
+        <div id="onlineBanner" class="banner-offline hidden" role="status" aria-live="polite">Offline - visualizzi i dati in cache</div>
+      </header>
+
+      <!-- Tabs: moved below title -->
+      <div class="tabs" role="tablist" aria-label="Mode">
+        <button class="tab active" id="tabSingle" role="tab" aria-selected="true">Il tuo meteo</button>
+        <button class="tab" id="tabMulti" role="tab" aria-selected="false">Confronta il meteo</button>
+        <button class="tab" id="tabForecast" role="tab" aria-selected="false">Previsioni</button>
+      </div>
+
+      <section id="privacyNotice" class="privacy-notice" aria-live="polite">
+        <div>
+          <strong>Privacy & consenso</strong>
+          <p>Per cercare il meteo, il nome della città viene inviato a servizi esterni (`Nominatim` e `Open-Meteo`). Accetta per continuare.</p>
+        </div>
+        <div class="privacy-actions">
+          <button id="consentAccept" class="search-btn" type="button">Accetto</button>
+          <button id="consentReject" class="secondary-btn" type="button">Non ora</button>
+        </div>
+      </section>
+      <div id="privacyStatus" class="muted privacy-status" role="status" aria-live="polite"></div>
+
+      <section class="search-bar" aria-label="Cerca città">
+        <div class="search-input-wrapper">
+          <div class="input-with-clear">
+            <input id="city" type="text" placeholder="Inserisci una città (es: Milano, Roma)" aria-label="Nome città" class="search-input" />
+            <button id="clearInput" class="clear-input" aria-label="Pulisci input" title="Pulisci">×</button>
+          </div>
+          <!-- small inline selector for forecast days (visible in forecast mode) -->
+          <select id="forecastDays" class="forecast-select forecast-select-inline" aria-label="Numero giorni">
+            <option value="3">3</option>
+            <option value="5">5</option>
+            <option value="7" selected>7</option>
+          </select>
+          <button id="searchBtn" class="search-btn">Cerca</button>
+        </div>
+        <small id="inputHint" class="muted" style="margin-top:6px; display:none;">Separare le città con virgola o punto e virgola. Per città con spazi usa le virgolette: "New York" Roma</small>
+      </section>
+
+      <div id="singleResultArea">
+        <!-- single-city result will be injected here -->
+        <div id="singleResult" class="card hidden" aria-live="polite">
+          <div class="result-row">
+            <div>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <div id="s_icon" class="weather-icon" aria-hidden="true">☀️</div>
+                <div class="temp" id="s_temp"></div>
+                <div class="condition" id="s_condition"></div>
+              </div>
+              <div class="meta">
+                <span id="s_location" class="muted"></span>
+                <span id="s_metaBadge" class="badge cached hidden">cache</span>
+                <span id="s_age" class="muted"></span>
+              </div>
+            </div>
+          </div>
+          <div class="details hidden" id="s_details" aria-label="Dettagli meteo">
+            <div class="detail"><div class="label">Vento</div><div class="value" id="s_wind"></div></div>
+            <div class="detail"><div class="label">Temperatura</div><div class="value" id="s_tempDetail"></div></div>
+            <div class="detail"><div class="label">Precipitazioni</div><div class="value" id="s_precip"></div></div>
+            <div class="detail"><div class="label">Data e Ora</div><div class="value" id="s_time"></div></div>
+            <div class="detail" id="s_sea_detail"><div class="label">Onde</div><div class="value" id="s_sea"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="city-chips" id="cityChips"></div>
+      <section class="cards-grid" id="cardsGrid" aria-live="polite"></section>
+
+      <!-- Forecast result area (hidden by default) -->
+      <div id="forecastResultArea">
+        <div id="forecastResult" class="card hidden" aria-live="polite">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <h2 id="f_location" style="margin:0">Previsioni</h2>
+            <!-- (selector moved inline near input) -->
+          </div>
+          <div id="f_days" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div id="status" class="hidden" role="status" aria-live="polite"></div>
+
+      <!-- Keep a hidden template for a city card to clone -->
+      <template id="cityCardTpl">
+        <div class="card">
+          <div class="result-row">
+            <div class="icon"><span class="weather-icon" aria-hidden="true">☀️</span></div>
+            <div>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <div class="temp">--°C</div>
+                <div class="condition">--</div>
+              </div>
+              <div class="meta">
+                <span class="location muted">--</span>
+                <span class="metaBadge badge cached hidden">cache</span>
+                <span class="age muted">--</span>
+              </div>
+            </div>
+          </div>
+          <div class="details hidden" aria-label="Dettagli meteo">
+            <div class="detail"><div class="label">Vento</div><div class="value wind">-- km/h</div></div>
+            <div class="detail"><div class="label">Temperatura</div><div class="value tempDetail">--°C</div></div>
+            <div class="detail"><div class="label">Precipitazioni</div><div class="value precip">--</div></div>
+            <div class="detail"><div class="label">Data e Ora</div><div class="value time">--</div></div>
+            <div class="detail sea-detail"><div class="label">Onde</div><div class="value sea">--</div></div>
+          </div>
+        </div>
+      </template>
+
+
+      <footer>
+        <small>App realizzata con Open-Meteo • Dati mostrati possono essere in cache se offline</small>
+      </footer>
+    </main>
+
+    <script src="/static/app.js?v=20260403b"></script>
+  </body>
+</html>
